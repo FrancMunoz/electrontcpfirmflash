@@ -11,5 +11,4 @@ A TCPClient to OTA update Particle Electron without cloud.
 
 #### Next Steps:
 
-- I didn't have more time to test SSL
 - Update system firmware.
