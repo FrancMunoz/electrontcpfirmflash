@@ -1,4 +1,4 @@
-# OTA TPCClient Updater
+# OTA TCPClient Updater
 
 A TCPClient to OTA update Particle Electron without cloud.
 

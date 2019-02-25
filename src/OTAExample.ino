@@ -1,6 +1,6 @@
 /*
  * Project Particle Electron OTA Update Without Cloud
- * Description: Download and flash user firmware using TPCClient to OTA update Particle Electron.
+ * Description: Download and flash user firmware using TCPClient to OTA update Particle Electron.
  * Author: Franc Muñoz - ZeroWorks!
  * Date: 25/02/2019
  */
