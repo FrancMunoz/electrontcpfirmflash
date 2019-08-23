@@ -110,6 +110,8 @@ void downloadFirmware() {
                                     } else {
                                         // Set Start Address returned from prepare.
                                         file.chunk_address = file.file_address;
+                                        Serial.printlnf("Address: ");
+                                        Serial.println(file.chunk_address);
                                     }
                                 }
                             } else {
@@ -151,9 +153,7 @@ void downloadFirmware() {
                             ok=true;
                             Serial.println("Firmware received.");
                         }
-
                     }
-
                     timeOut=millis();
                 }
             }
@@ -177,12 +177,12 @@ void downloadFirmware() {
 
     if(ok) {
         Serial.println("Launching Update");
+        result = Spark_Finish_Firmware_Update(file, ok, NULL);
+        if(result != 0) {
+            Serial.printlnf("Finish failed %d", result);
+            ok=true;
+        }
     } else {
         Serial.println("Process finished with an error");
-    }
-    result = Spark_Finish_Firmware_Update(file, ok, NULL);
-    if(result != 0) {
-        Serial.printlnf("Finish failed %d", result);
-        ok=true;
     }
 }

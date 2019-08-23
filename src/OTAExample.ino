@@ -16,7 +16,7 @@ SYSTEM_MODE(SEMI_AUTOMATIC);
 void setup() {
     Serial.begin();
     delay(2000);
-    Serial.println("Device OTA Update v.0.1");
+    Serial.println("Device OTA Update v.0.12");
     Cellular.on();
     Cellular.connect();
 }
