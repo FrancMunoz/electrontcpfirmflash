@@ -16,7 +16,7 @@ SYSTEM_MODE(SEMI_AUTOMATIC);
 void setup() {
     Serial.begin();
     delay(2000);
-    Serial.println("Device OTA Update v.0.12");
+    Serial.println("Device OTA Update v.0.14");
     Cellular.on();
     Cellular.connect();
 }
@@ -30,6 +30,7 @@ void loop() {
         if(Cellular.ready()) {
             once=false;
             downloadFirmware();
+            while(1); // Stop doing nothing
         } else {
             ms=millis();
         }

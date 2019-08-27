@@ -3,10 +3,11 @@
 
 void downloadFirmware() {
     TCPClient client;
-    u_char buffer[512];
+    u_int8_t buffer[512];
     u_int avail;
     u_int timeOut;
     u_int recibido=0;
+    u_int current=0;
     bool hayHeader=false;
     bool done=false;
 
@@ -25,7 +26,6 @@ void downloadFirmware() {
     const char *path="/updates/ota/flash.bin";
 
     FileTransfer::Descriptor file;
-
     String header="";
 
     Serial.println("Downloading Firmware");
@@ -70,7 +70,7 @@ void downloadFirmware() {
                         if(c=='\n' && last=='\r') {
                             if(hf) {
                                 hayHeader=true;
-                                Serial.print("Header:");
+                                Serial.println("Header:");
                                 Serial.println(header);
 
                                 pos=strstr(header, " ");
@@ -102,15 +102,15 @@ void downloadFirmware() {
                                     file.chunk_size=0;
                                     file.store = FileTransfer::Store::FIRMWARE;
 
-                                    result = Spark_Prepare_For_Firmware_Update(file, 0, NULL);
+                                    result=Spark_Prepare_For_Firmware_Update(file, 0, NULL);
                                     if(result!=0) {
                                         Serial.printlnf("Prepare failed %d", result);
                                         done=true;
                                         break;
                                     } else {
                                         // Set Start Address returned from prepare.
-                                        file.chunk_address = file.file_address;
-                                        Serial.printlnf("Address: ");
+                                        file.chunk_address=file.file_address;
+                                        Serial.print("Start Address: ");
                                         Serial.println(file.chunk_address);
                                     }
                                 }
@@ -123,21 +123,27 @@ void downloadFirmware() {
                         last=c;
                         timePrg=millis();
                     } else {
-                        if(avail>512) avail=512;
-                        avail=client.read(&buffer[0], avail);
+                        if(avail+current>512) avail=512-current;
+                        avail=client.read(&buffer[current], avail);
                         recibido+=avail;
+                        current+=avail;
 
-                        // Set chunk sise from downloaded data.
-                        file.chunk_size=avail;
-                        result = Spark_Save_Firmware_Chunk(file, &buffer[0], NULL);
-                		if (result != 0) {
-                			Serial.printlnf("Save chunk failed %d", result);
-                			done=true;
-                			break;
-                		}
+                        //Serial.printlnf("Received %d of %d", avail, recibido);
 
-                        // Move start to next chunk...
-                        file.chunk_address+=avail;
+                        // Set chunk size from downloaded data.
+                        if(current>=512 || recibido>=length) {
+                            //Serial.printlnf("Set chunk %d.", current);
+                            file.chunk_size=current;
+                            result=Spark_Save_Firmware_Chunk(file, &buffer[0], NULL);
+                            if (result != 0) {
+                                Serial.printlnf("Save chunk failed %d", result);
+                                done=true;
+                                break;
+                            }
+                            // Move start to next chunk...
+                            file.chunk_address+=current;
+                            current=0;
+                        }
 
                         if(millis()-timePrg>1000 || recibido>=length) {
                             // Show progress each second and at the end.
@@ -176,11 +182,19 @@ void downloadFirmware() {
     }
 
     if(ok) {
+        Serial.print("End Address: ");
+        Serial.println(file.chunk_address);
+
+        Serial.print("Total: ");
+        Serial.println(file.chunk_address-file.file_address);
+
         Serial.println("Launching Update");
-        result = Spark_Finish_Firmware_Update(file, ok, NULL);
-        if(result != 0) {
-            Serial.printlnf("Finish failed %d", result);
+        result=Spark_Finish_Firmware_Update(file, ok, NULL);
+        if(result!=0) {
+            Serial.printlnf("Finish failed code %d", result);
             ok=true;
+        } else {
+            System.reset();
         }
     } else {
         Serial.println("Process finished with an error");
